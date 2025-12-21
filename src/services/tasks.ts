@@ -1,5 +1,5 @@
-import { google, tasks_v1, Auth } from "googleapis";
-import { TaskList, Task } from "../types/index.js";
+import { google, type tasks_v1, type Auth } from "googleapis";
+import { type TaskList, type Task } from "../types/index.js";
 
 /**
  * Tasks Service - Alternative to Google Keep
@@ -9,7 +9,7 @@ import { TaskList, Task } from "../types/index.js";
  * notes and task lists. Tasks can include notes/descriptions.
  */
 export class TasksService {
-  private tasks: tasks_v1.Tasks;
+  private readonly tasks: tasks_v1.Tasks;
 
   constructor(authClient: Auth.OAuth2Client) {
     this.tasks = google.tasks({ version: "v1", auth: authClient });
@@ -17,7 +17,7 @@ export class TasksService {
 
   // Task Lists Operations
 
-  async listTaskLists(): Promise<TaskList[]> {
+  public async listTaskLists(): Promise<TaskList[]> {
     const response = await this.tasks.tasklists.list({
       maxResults: 100,
     });
@@ -29,7 +29,7 @@ export class TasksService {
     }));
   }
 
-  async getTaskList(taskListId: string): Promise<TaskList> {
+  public async getTaskList(taskListId: string): Promise<TaskList> {
     const response = await this.tasks.tasklists.get({
       tasklist: taskListId,
     });
@@ -41,7 +41,7 @@ export class TasksService {
     };
   }
 
-  async createTaskList(title: string): Promise<TaskList> {
+  public async createTaskList(title: string): Promise<TaskList> {
     const response = await this.tasks.tasklists.insert({
       requestBody: { title },
     });
@@ -53,7 +53,7 @@ export class TasksService {
     };
   }
 
-  async updateTaskList(taskListId: string, title: string): Promise<TaskList> {
+  public async updateTaskList(taskListId: string, title: string): Promise<TaskList> {
     const response = await this.tasks.tasklists.update({
       tasklist: taskListId,
       requestBody: { title },
@@ -66,7 +66,7 @@ export class TasksService {
     };
   }
 
-  async deleteTaskList(taskListId: string): Promise<void> {
+  public async deleteTaskList(taskListId: string): Promise<void> {
     await this.tasks.tasklists.delete({
       tasklist: taskListId,
     });
@@ -74,7 +74,7 @@ export class TasksService {
 
   // Tasks Operations
 
-  async listTasks(
+  public async listTasks(
     taskListId: string,
     options: {
       showCompleted?: boolean;
@@ -110,7 +110,7 @@ export class TasksService {
     };
   }
 
-  async getTask(taskListId: string, taskId: string): Promise<Task> {
+  public async getTask(taskListId: string, taskId: string): Promise<Task> {
     const response = await this.tasks.tasks.get({
       tasklist: taskListId,
       task: taskId,
@@ -128,7 +128,7 @@ export class TasksService {
     };
   }
 
-  async createTask(
+  public async createTask(
     taskListId: string,
     options: {
       title: string;
@@ -159,7 +159,7 @@ export class TasksService {
     };
   }
 
-  async updateTask(
+  public async updateTask(
     taskListId: string,
     taskId: string,
     updates: {
@@ -196,22 +196,22 @@ export class TasksService {
     };
   }
 
-  async deleteTask(taskListId: string, taskId: string): Promise<void> {
+  public async deleteTask(taskListId: string, taskId: string): Promise<void> {
     await this.tasks.tasks.delete({
       tasklist: taskListId,
       task: taskId,
     });
   }
 
-  async completeTask(taskListId: string, taskId: string): Promise<Task> {
+  public async completeTask(taskListId: string, taskId: string): Promise<Task> {
     return this.updateTask(taskListId, taskId, { status: "completed" });
   }
 
-  async uncompleteTask(taskListId: string, taskId: string): Promise<Task> {
+  public async uncompleteTask(taskListId: string, taskId: string): Promise<Task> {
     return this.updateTask(taskListId, taskId, { status: "needsAction" });
   }
 
-  async moveTask(
+  public async moveTask(
     taskListId: string,
     taskId: string,
     options: {
@@ -238,7 +238,7 @@ export class TasksService {
     };
   }
 
-  async clearCompletedTasks(taskListId: string): Promise<void> {
+  public async clearCompletedTasks(taskListId: string): Promise<void> {
     await this.tasks.tasks.clear({
       tasklist: taskListId,
     });
@@ -246,7 +246,7 @@ export class TasksService {
 
   // Convenience methods to use tasks as notes (similar to Keep)
 
-  async createNote(title: string, content: string): Promise<{ taskListId: string; task: Task }> {
+  public async createNote(title: string, content: string): Promise<{ taskListId: string; task: Task }> {
     // Find or create a "Notes" task list
     const lists = await this.listTaskLists();
     let notesList = lists.find((l) => l.title === "Notes");
@@ -263,7 +263,7 @@ export class TasksService {
     return { taskListId: notesList.id, task };
   }
 
-  async listNotes(): Promise<Task[]> {
+  public async listNotes(): Promise<Task[]> {
     const lists = await this.listTaskLists();
     const notesList = lists.find((l) => l.title === "Notes");
 
@@ -275,7 +275,7 @@ export class TasksService {
     return result.tasks;
   }
 
-  async updateNote(taskId: string, title?: string, content?: string): Promise<Task> {
+  public async updateNote(taskId: string, title?: string, content?: string): Promise<Task> {
     const lists = await this.listTaskLists();
     const notesList = lists.find((l) => l.title === "Notes");
 
@@ -289,7 +289,7 @@ export class TasksService {
     });
   }
 
-  async deleteNote(taskId: string): Promise<void> {
+  public async deleteNote(taskId: string): Promise<void> {
     const lists = await this.listTaskLists();
     const notesList = lists.find((l) => l.title === "Notes");
 

@@ -35,10 +35,9 @@ import {
   DriveCreateFolderSchema,
   DriveSearchSchema,
 } from "./types/index.js";
-import { z } from "zod";
 
 export class GoogleWorkspaceMCPServer {
-  private server: Server;
+  private readonly server: Server;
   private drive: DriveService | null = null;
   private docs: DocsService | null = null;
   private sheets: SheetsService | null = null;
@@ -3293,10 +3292,10 @@ export class GoogleWorkspaceMCPServer {
     });
   }
 
-  async run(): Promise<void> {
+  public async run(): Promise<void> {
     // Ensure directories exist on startup
     oauth.ensureDirectoriesExist();
-    
+
     // Log configuration paths for user reference
     const paths = GoogleOAuth.getPaths();
     console.error("Google MCP Server starting...");
@@ -3304,7 +3303,7 @@ export class GoogleWorkspaceMCPServer {
     console.error(`  Data directory: ${paths.dataDir}`);
     console.error(`  Credentials file: ${paths.credentialsPath}`);
     console.error(`  Token file: ${paths.tokenPath}`);
-    
+
     // Try to initialize OAuth on startup
     await oauth.initialize();
     if (oauth.isReady()) {

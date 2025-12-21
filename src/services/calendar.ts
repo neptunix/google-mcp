@@ -1,4 +1,4 @@
-import { google, calendar_v3, Auth } from "googleapis";
+import { google, type calendar_v3, type Auth } from "googleapis";
 
 export interface CalendarEvent {
   id: string;
@@ -84,7 +84,7 @@ export interface EventUpdateOptions {
 }
 
 export class CalendarService {
-  private calendar: calendar_v3.Calendar;
+  private readonly calendar: calendar_v3.Calendar;
 
   constructor(authClient: Auth.OAuth2Client) {
     this.calendar = google.calendar({ version: "v3", auth: authClient });
@@ -92,7 +92,7 @@ export class CalendarService {
 
   // Calendar List Operations
 
-  async listCalendars(): Promise<CalendarInfo[]> {
+  public async listCalendars(): Promise<CalendarInfo[]> {
     const response = await this.calendar.calendarList.list({
       maxResults: 250,
     });
@@ -109,7 +109,7 @@ export class CalendarService {
     }));
   }
 
-  async getCalendar(calendarId: string): Promise<CalendarInfo> {
+  public async getCalendar(calendarId: string): Promise<CalendarInfo> {
     const response = await this.calendar.calendarList.get({
       calendarId,
     });
@@ -128,7 +128,7 @@ export class CalendarService {
 
   // Event Operations
 
-  async listEvents(
+  public async listEvents(
     calendarId = "primary",
     options: {
       timeMin?: string;
@@ -161,7 +161,7 @@ export class CalendarService {
     };
   }
 
-  async getEvent(calendarId = "primary", eventId: string): Promise<CalendarEvent> {
+  public async getEvent(calendarId = "primary", eventId: string): Promise<CalendarEvent> {
     const response = await this.calendar.events.get({
       calendarId,
       eventId,
@@ -170,7 +170,7 @@ export class CalendarService {
     return this.formatEvent(response.data);
   }
 
-  async createEvent(options: EventCreateOptions): Promise<CalendarEvent> {
+  public async createEvent(options: EventCreateOptions): Promise<CalendarEvent> {
     const calendarId = options.calendarId || "primary";
 
     const eventResource: calendar_v3.Schema$Event = {
@@ -192,7 +192,7 @@ export class CalendarService {
     return this.formatEvent(response.data);
   }
 
-  async updateEvent(options: EventUpdateOptions): Promise<CalendarEvent> {
+  public async updateEvent(options: EventUpdateOptions): Promise<CalendarEvent> {
     const calendarId = options.calendarId || "primary";
 
     // Get current event first
@@ -223,7 +223,7 @@ export class CalendarService {
     return this.formatEvent(response.data);
   }
 
-  async deleteEvent(
+  public async deleteEvent(
     calendarId = "primary",
     eventId: string,
     sendUpdates: "all" | "externalOnly" | "none" = "none"
@@ -235,7 +235,7 @@ export class CalendarService {
     });
   }
 
-  async quickAddEvent(
+  public async quickAddEvent(
     calendarId = "primary",
     text: string,
     sendUpdates: "all" | "externalOnly" | "none" = "none"
@@ -251,7 +251,7 @@ export class CalendarService {
 
   // Free/Busy Query
 
-  async getFreeBusy(
+  public async getFreeBusy(
     timeMin: string,
     timeMax: string,
     calendarIds: string[] = ["primary"]
@@ -288,7 +288,7 @@ export class CalendarService {
 
   // Upcoming Events Helper
 
-  async getUpcomingEvents(
+  public async getUpcomingEvents(
     calendarId = "primary",
     days = 7,
     maxResults = 20
@@ -310,7 +310,7 @@ export class CalendarService {
 
   // Today's Events Helper
 
-  async getTodayEvents(calendarId = "primary"): Promise<CalendarEvent[]> {
+  public async getTodayEvents(calendarId = "primary"): Promise<CalendarEvent[]> {
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);

@@ -1,17 +1,17 @@
-import { google, docs_v1, Auth } from "googleapis";
-import { DocContent } from "../types/index.js";
+import { google, type docs_v1, type Auth } from "googleapis";
+import { type DocContent } from "../types/index.js";
 import { DriveService } from "./drive.js";
 
 export class DocsService {
-  private docs: docs_v1.Docs;
-  private drive: DriveService;
+  private readonly docs: docs_v1.Docs;
+  private readonly drive: DriveService;
 
   constructor(authClient: Auth.OAuth2Client) {
     this.docs = google.docs({ version: "v1", auth: authClient });
     this.drive = new DriveService(authClient);
   }
 
-  async createDocument(title: string, content?: string, folderId?: string): Promise<DocContent> {
+  public async createDocument(title: string, content?: string, folderId?: string): Promise<DocContent> {
     // Create the document
     const response = await this.docs.documents.create({
       requestBody: {
@@ -50,7 +50,7 @@ export class DocsService {
     };
   }
 
-  async getDocument(documentId: string): Promise<DocContent> {
+  public async getDocument(documentId: string): Promise<DocContent> {
     const response = await this.docs.documents.get({ documentId });
 
     // Extract text content from the document
@@ -99,7 +99,7 @@ export class DocsService {
     return text;
   }
 
-  async insertText(documentId: string, text: string, index: number): Promise<void> {
+  public async insertText(documentId: string, text: string, index: number): Promise<void> {
     await this.docs.documents.batchUpdate({
       documentId,
       requestBody: {
@@ -115,7 +115,7 @@ export class DocsService {
     });
   }
 
-  async appendText(documentId: string, text: string): Promise<void> {
+  public async appendText(documentId: string, text: string): Promise<void> {
     // Get the document to find the end index
     const doc = await this.docs.documents.get({ documentId });
 
@@ -132,7 +132,7 @@ export class DocsService {
     await this.insertText(documentId, text, endIndex);
   }
 
-  async deleteContent(documentId: string, startIndex: number, endIndex: number): Promise<void> {
+  public async deleteContent(documentId: string, startIndex: number, endIndex: number): Promise<void> {
     await this.docs.documents.batchUpdate({
       documentId,
       requestBody: {
@@ -150,7 +150,7 @@ export class DocsService {
     });
   }
 
-  async replaceAllText(
+  public async replaceAllText(
     documentId: string,
     searchText: string,
     replaceText: string,
@@ -181,7 +181,7 @@ export class DocsService {
     return 0;
   }
 
-  async insertTable(
+  public async insertTable(
     documentId: string,
     rows: number,
     columns: number,
@@ -203,7 +203,7 @@ export class DocsService {
     });
   }
 
-  async updateDocumentStyle(
+  public async updateDocumentStyle(
     documentId: string,
     style: {
       bold?: boolean;
@@ -256,7 +256,7 @@ export class DocsService {
     });
   }
 
-  async listDocuments(pageSize = 50, pageToken?: string): Promise<{
+  public async listDocuments(pageSize = 50, pageToken?: string): Promise<{
     documents: Array<{ id: string; name: string; modifiedTime?: string }>;
     nextPageToken?: string;
   }> {

@@ -1,14 +1,14 @@
-import { google, drive_v3, Auth } from "googleapis";
-import { DriveFile, DriveListOptions } from "../types/index.js";
+import { google, type drive_v3, type Auth } from "googleapis";
+import { type DriveFile, type DriveListOptions } from "../types/index.js";
 
 export class DriveService {
-  private drive: drive_v3.Drive;
+  private readonly drive: drive_v3.Drive;
 
   constructor(authClient: Auth.OAuth2Client) {
     this.drive = google.drive({ version: "v3", auth: authClient });
   }
 
-  async listFiles(options: DriveListOptions = {}): Promise<{
+  public async listFiles(options: DriveListOptions = {}): Promise<{
     files: DriveFile[];
     nextPageToken?: string;
   }> {
@@ -53,7 +53,7 @@ export class DriveService {
     };
   }
 
-  async getFile(fileId: string): Promise<DriveFile> {
+  public async getFile(fileId: string): Promise<DriveFile> {
     const response = await this.drive.files.get({
       fileId,
       fields: "id, name, mimeType, parents, webViewLink, createdTime, modifiedTime, size, owners",
@@ -75,7 +75,7 @@ export class DriveService {
     };
   }
 
-  async downloadFile(fileId: string): Promise<string> {
+  public async downloadFile(fileId: string): Promise<string> {
     const file = await this.getFile(fileId);
 
     // Handle Google Workspace files differently
@@ -113,7 +113,7 @@ export class DriveService {
     return response.data as string;
   }
 
-  async uploadFile(
+  public async uploadFile(
     name: string,
     content: string,
     mimeType?: string,
@@ -146,7 +146,7 @@ export class DriveService {
     };
   }
 
-  async updateFile(
+  public async updateFile(
     fileId: string,
     content: string,
     mimeType?: string
@@ -173,11 +173,11 @@ export class DriveService {
     };
   }
 
-  async deleteFile(fileId: string): Promise<void> {
+  public async deleteFile(fileId: string): Promise<void> {
     await this.drive.files.delete({ fileId });
   }
 
-  async createFolder(name: string, parentFolderId?: string): Promise<DriveFile> {
+  public async createFolder(name: string, parentFolderId?: string): Promise<DriveFile> {
     const fileMetadata: drive_v3.Schema$File = {
       name,
       mimeType: "application/vnd.google-apps.folder",
@@ -200,7 +200,7 @@ export class DriveService {
     };
   }
 
-  async search(query: string, pageSize = 50, pageToken?: string): Promise<{
+  public async search(query: string, pageSize = 50, pageToken?: string): Promise<{
     files: DriveFile[];
     nextPageToken?: string;
   }> {
@@ -229,7 +229,7 @@ export class DriveService {
     };
   }
 
-  async moveFile(fileId: string, newFolderId: string): Promise<DriveFile> {
+  public async moveFile(fileId: string, newFolderId: string): Promise<DriveFile> {
     // Get current parents
     const file = await this.drive.files.get({
       fileId,
@@ -256,7 +256,7 @@ export class DriveService {
     };
   }
 
-  async copyFile(fileId: string, newName?: string, folderId?: string): Promise<DriveFile> {
+  public async copyFile(fileId: string, newName?: string, folderId?: string): Promise<DriveFile> {
     const requestBody: drive_v3.Schema$File = {};
 
     if (newName) {
@@ -284,7 +284,7 @@ export class DriveService {
     };
   }
 
-  async renameFile(fileId: string, newName: string): Promise<DriveFile> {
+  public async renameFile(fileId: string, newName: string): Promise<DriveFile> {
     const response = await this.drive.files.update({
       fileId,
       requestBody: { name: newName },

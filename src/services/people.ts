@@ -1,4 +1,4 @@
-import { google, people_v1, Auth } from "googleapis";
+import { google, type people_v1, type Auth } from "googleapis";
 
 export interface Contact {
   resourceName: string;
@@ -56,7 +56,7 @@ export interface UpdateContactOptions {
 }
 
 export class PeopleService {
-  private people: people_v1.People;
+  private readonly people: people_v1.People;
 
   constructor(authClient: Auth.OAuth2Client) {
     this.people = google.people({ version: "v1", auth: authClient });
@@ -64,7 +64,7 @@ export class PeopleService {
 
   // Contacts
 
-  async listContacts(options: {
+  public async listContacts(options: {
     pageSize?: number;
     pageToken?: string;
     sortOrder?: "LAST_MODIFIED_ASCENDING" | "LAST_MODIFIED_DESCENDING" | "FIRST_NAME_ASCENDING" | "LAST_NAME_ASCENDING";
@@ -87,7 +87,7 @@ export class PeopleService {
     };
   }
 
-  async getContact(resourceName: string): Promise<Contact> {
+  public async getContact(resourceName: string): Promise<Contact> {
     const response = await this.people.people.get({
       resourceName,
       personFields: "names,emailAddresses,phoneNumbers,addresses,organizations,birthdays,biographies,photos",
@@ -96,7 +96,7 @@ export class PeopleService {
     return this.formatContact(response.data);
   }
 
-  async searchContacts(query: string, maxResults = 30): Promise<Contact[]> {
+  public async searchContacts(query: string, maxResults = 30): Promise<Contact[]> {
     const response = await this.people.people.searchContacts({
       query,
       readMask: "names,emailAddresses,phoneNumbers,addresses,organizations,birthdays,biographies,photos",
@@ -108,7 +108,7 @@ export class PeopleService {
       .map((r) => this.formatContact(r.person!));
   }
 
-  async createContact(options: CreateContactOptions): Promise<Contact> {
+  public async createContact(options: CreateContactOptions): Promise<Contact> {
     const person: people_v1.Schema$Person = {
       names: [
         {
@@ -153,7 +153,7 @@ export class PeopleService {
     return this.formatContact(response.data);
   }
 
-  async updateContact(options: UpdateContactOptions): Promise<Contact> {
+  public async updateContact(options: UpdateContactOptions): Promise<Contact> {
     const person: people_v1.Schema$Person = {
       etag: options.etag,
     };
@@ -211,7 +211,7 @@ export class PeopleService {
     return this.formatContact(response.data);
   }
 
-  async deleteContact(resourceName: string): Promise<void> {
+  public async deleteContact(resourceName: string): Promise<void> {
     await this.people.people.deleteContact({
       resourceName,
     });
@@ -219,7 +219,7 @@ export class PeopleService {
 
   // Contact Groups
 
-  async listContactGroups(): Promise<ContactGroup[]> {
+  public async listContactGroups(): Promise<ContactGroup[]> {
     const response = await this.people.contactGroups.list({
       pageSize: 100,
     });
@@ -233,7 +233,7 @@ export class PeopleService {
     }));
   }
 
-  async getContactGroup(resourceName: string): Promise<ContactGroup & { members?: Contact[] }> {
+  public async getContactGroup(resourceName: string): Promise<ContactGroup & { members?: Contact[] }> {
     const response = await this.people.contactGroups.get({
       resourceName,
       maxMembers: 100,
@@ -261,7 +261,7 @@ export class PeopleService {
     };
   }
 
-  async createContactGroup(name: string): Promise<ContactGroup> {
+  public async createContactGroup(name: string): Promise<ContactGroup> {
     const response = await this.people.contactGroups.create({
       requestBody: {
         contactGroup: { name },
@@ -277,7 +277,7 @@ export class PeopleService {
     };
   }
 
-  async deleteContactGroup(resourceName: string): Promise<void> {
+  public async deleteContactGroup(resourceName: string): Promise<void> {
     await this.people.contactGroups.delete({
       resourceName,
       deleteContacts: false,
@@ -286,7 +286,7 @@ export class PeopleService {
 
   // Other People directory (for workspace users)
 
-  async searchDirectory(query: string, maxResults = 30): Promise<Contact[]> {
+  public async searchDirectory(query: string, maxResults = 30): Promise<Contact[]> {
     try {
       const response = await this.people.people.searchDirectoryPeople({
         query,
@@ -304,7 +304,7 @@ export class PeopleService {
 
   // Helper to get "Other Contacts" (contacts from Gmail interactions)
 
-  async listOtherContacts(pageSize = 100, pageToken?: string): Promise<{
+  public async listOtherContacts(pageSize = 100, pageToken?: string): Promise<{
     contacts: Contact[];
     nextPageToken?: string;
   }> {

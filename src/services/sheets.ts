@@ -1,17 +1,17 @@
-import { google, sheets_v4, Auth } from "googleapis";
-import { SpreadsheetInfo, SheetInfo, SheetRange } from "../types/index.js";
+import { google, type sheets_v4, type Auth } from "googleapis";
+import { type SpreadsheetInfo, type SheetInfo, type SheetRange } from "../types/index.js";
 import { DriveService } from "./drive.js";
 
 export class SheetsService {
-  private sheets: sheets_v4.Sheets;
-  private drive: DriveService;
+  private readonly sheets: sheets_v4.Sheets;
+  private readonly drive: DriveService;
 
   constructor(authClient: Auth.OAuth2Client) {
     this.sheets = google.sheets({ version: "v4", auth: authClient });
     this.drive = new DriveService(authClient);
   }
 
-  async createSpreadsheet(
+  public async createSpreadsheet(
     title: string,
     sheetNames?: string[],
     folderId?: string
@@ -40,7 +40,7 @@ export class SheetsService {
     return this.formatSpreadsheetInfo(response.data);
   }
 
-  async getSpreadsheet(spreadsheetId: string): Promise<SpreadsheetInfo> {
+  public async getSpreadsheet(spreadsheetId: string): Promise<SpreadsheetInfo> {
     const response = await this.sheets.spreadsheets.get({
       spreadsheetId,
       includeGridData: false,
@@ -64,7 +64,7 @@ export class SheetsService {
     };
   }
 
-  async getValues(spreadsheetId: string, range: string): Promise<SheetRange> {
+  public async getValues(spreadsheetId: string, range: string): Promise<SheetRange> {
     const response = await this.sheets.spreadsheets.values.get({
       spreadsheetId,
       range,
@@ -79,7 +79,7 @@ export class SheetsService {
     };
   }
 
-  async updateValues(
+  public async updateValues(
     spreadsheetId: string,
     range: string,
     values: unknown[][],
@@ -99,7 +99,7 @@ export class SheetsService {
     };
   }
 
-  async appendValues(
+  public async appendValues(
     spreadsheetId: string,
     range: string,
     values: unknown[][],
@@ -120,14 +120,14 @@ export class SheetsService {
     };
   }
 
-  async clearValues(spreadsheetId: string, range: string): Promise<void> {
+  public async clearValues(spreadsheetId: string, range: string): Promise<void> {
     await this.sheets.spreadsheets.values.clear({
       spreadsheetId,
       range,
     });
   }
 
-  async addSheet(spreadsheetId: string, title: string): Promise<SheetInfo> {
+  public async addSheet(spreadsheetId: string, title: string): Promise<SheetInfo> {
     const response = await this.sheets.spreadsheets.batchUpdate({
       spreadsheetId,
       requestBody: {
@@ -152,7 +152,7 @@ export class SheetsService {
     };
   }
 
-  async deleteSheet(spreadsheetId: string, sheetId: number): Promise<void> {
+  public async deleteSheet(spreadsheetId: string, sheetId: number): Promise<void> {
     await this.sheets.spreadsheets.batchUpdate({
       spreadsheetId,
       requestBody: {
@@ -165,7 +165,7 @@ export class SheetsService {
     });
   }
 
-  async renameSheet(
+  public async renameSheet(
     spreadsheetId: string,
     sheetId: number,
     newTitle: string
@@ -188,7 +188,7 @@ export class SheetsService {
     });
   }
 
-  async formatCells(
+  public async formatCells(
     spreadsheetId: string,
     sheetId: number,
     startRow: number,
@@ -252,7 +252,7 @@ export class SheetsService {
     });
   }
 
-  async insertRows(
+  public async insertRows(
     spreadsheetId: string,
     sheetId: number,
     startIndex: number,
@@ -278,7 +278,7 @@ export class SheetsService {
     });
   }
 
-  async insertColumns(
+  public async insertColumns(
     spreadsheetId: string,
     sheetId: number,
     startIndex: number,
@@ -304,7 +304,7 @@ export class SheetsService {
     });
   }
 
-  async deleteRows(
+  public async deleteRows(
     spreadsheetId: string,
     sheetId: number,
     startIndex: number,
@@ -329,7 +329,7 @@ export class SheetsService {
     });
   }
 
-  async deleteColumns(
+  public async deleteColumns(
     spreadsheetId: string,
     sheetId: number,
     startIndex: number,
@@ -354,7 +354,7 @@ export class SheetsService {
     });
   }
 
-  async listSpreadsheets(pageSize = 50, pageToken?: string): Promise<{
+  public async listSpreadsheets(pageSize = 50, pageToken?: string): Promise<{
     spreadsheets: Array<{ id: string; name: string; modifiedTime?: string }>;
     nextPageToken?: string;
   }> {
@@ -375,7 +375,7 @@ export class SheetsService {
     };
   }
 
-  async batchGetValues(
+  public async batchGetValues(
     spreadsheetId: string,
     ranges: string[]
   ): Promise<SheetRange[]> {
@@ -393,7 +393,7 @@ export class SheetsService {
     }));
   }
 
-  async batchUpdateValues(
+  public async batchUpdateValues(
     spreadsheetId: string,
     data: Array<{ range: string; values: unknown[][] }>,
     valueInputOption: "RAW" | "USER_ENTERED" = "USER_ENTERED"

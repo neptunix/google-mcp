@@ -1,4 +1,4 @@
-import { google, youtube_v3, Auth } from "googleapis";
+import { google, type youtube_v3, type Auth } from "googleapis";
 
 export interface YouTubeVideo {
   id: string;
@@ -81,7 +81,7 @@ export interface YouTubeComment {
 }
 
 export class YouTubeService {
-  private youtube: youtube_v3.Youtube;
+  private readonly youtube: youtube_v3.Youtube;
 
   constructor(authClient: Auth.OAuth2Client) {
     this.youtube = google.youtube({ version: "v3", auth: authClient });
@@ -89,7 +89,7 @@ export class YouTubeService {
 
   // Search
 
-  async search(options: {
+  public async search(options: {
     query: string;
     type?: "video" | "channel" | "playlist";
     maxResults?: number;
@@ -159,7 +159,7 @@ export class YouTubeService {
 
   // Videos
 
-  async getVideo(videoId: string): Promise<YouTubeVideo> {
+  public async getVideo(videoId: string): Promise<YouTubeVideo> {
     const response = await this.youtube.videos.list({
       part: ["snippet", "contentDetails", "statistics"],
       id: [videoId],
@@ -187,7 +187,7 @@ export class YouTubeService {
     };
   }
 
-  async getVideos(videoIds: string[]): Promise<YouTubeVideo[]> {
+  public async getVideos(videoIds: string[]): Promise<YouTubeVideo[]> {
     const response = await this.youtube.videos.list({
       part: ["snippet", "contentDetails", "statistics"],
       id: videoIds,
@@ -212,7 +212,7 @@ export class YouTubeService {
 
   // Channels
 
-  async getChannel(channelId: string): Promise<YouTubeChannel> {
+  public async getChannel(channelId: string): Promise<YouTubeChannel> {
     const response = await this.youtube.channels.list({
       part: ["snippet", "statistics"],
       id: [channelId],
@@ -239,7 +239,7 @@ export class YouTubeService {
     };
   }
 
-  async getMyChannel(): Promise<YouTubeChannel> {
+  public async getMyChannel(): Promise<YouTubeChannel> {
     const response = await this.youtube.channels.list({
       part: ["snippet", "statistics"],
       mine: true,
@@ -268,7 +268,7 @@ export class YouTubeService {
 
   // Playlists
 
-  async listMyPlaylists(options: {
+  public async listMyPlaylists(options: {
     maxResults?: number;
     pageToken?: string;
   } = {}): Promise<{ playlists: YouTubePlaylist[]; nextPageToken?: string }> {
@@ -297,7 +297,7 @@ export class YouTubeService {
     };
   }
 
-  async getPlaylist(playlistId: string): Promise<YouTubePlaylist> {
+  public async getPlaylist(playlistId: string): Promise<YouTubePlaylist> {
     const response = await this.youtube.playlists.list({
       part: ["snippet", "contentDetails"],
       id: [playlistId],
@@ -321,7 +321,7 @@ export class YouTubeService {
     };
   }
 
-  async getPlaylistItems(
+  public async getPlaylistItems(
     playlistId: string,
     options: { maxResults?: number; pageToken?: string } = {}
   ): Promise<{ items: YouTubePlaylistItem[]; nextPageToken?: string }> {
@@ -352,7 +352,7 @@ export class YouTubeService {
 
   // Comments
 
-  async getVideoComments(
+  public async getVideoComments(
     videoId: string,
     options: {
       maxResults?: number;
@@ -390,7 +390,7 @@ export class YouTubeService {
 
   // Subscriptions
 
-  async listMySubscriptions(options: {
+  public async listMySubscriptions(options: {
     maxResults?: number;
     pageToken?: string;
   } = {}): Promise<{ channels: YouTubeChannel[]; nextPageToken?: string }> {
@@ -417,7 +417,7 @@ export class YouTubeService {
 
   // Liked Videos
 
-  async listLikedVideos(options: {
+  public async listLikedVideos(options: {
     maxResults?: number;
     pageToken?: string;
   } = {}): Promise<{ videos: YouTubeVideo[]; nextPageToken?: string }> {
@@ -452,7 +452,7 @@ export class YouTubeService {
 
   // Rate Video
 
-  async rateVideo(videoId: string, rating: "like" | "dislike" | "none"): Promise<void> {
+  public async rateVideo(videoId: string, rating: "like" | "dislike" | "none"): Promise<void> {
     await this.youtube.videos.rate({
       id: videoId,
       rating,
@@ -461,7 +461,7 @@ export class YouTubeService {
 
   // Captions
 
-  async listCaptions(videoId: string): Promise<
+  public async listCaptions(videoId: string): Promise<
     Array<{
       id: string;
       language: string;

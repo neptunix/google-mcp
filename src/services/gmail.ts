@@ -1,4 +1,4 @@
-import { google, gmail_v1, Auth } from "googleapis";
+import { google, type gmail_v1, type Auth } from "googleapis";
 
 export interface GmailMessage {
   id: string;
@@ -40,7 +40,7 @@ export interface SendEmailOptions {
 }
 
 export class GmailService {
-  private gmail: gmail_v1.Gmail;
+  private readonly gmail: gmail_v1.Gmail;
 
   constructor(authClient: Auth.OAuth2Client) {
     this.gmail = google.gmail({ version: "v1", auth: authClient });
@@ -48,7 +48,7 @@ export class GmailService {
 
   // Profile
 
-  async getProfile(): Promise<{
+  public async getProfile(): Promise<{
     emailAddress: string;
     messagesTotal: number;
     threadsTotal: number;
@@ -65,7 +65,7 @@ export class GmailService {
 
   // Labels
 
-  async listLabels(): Promise<GmailLabel[]> {
+  public async listLabels(): Promise<GmailLabel[]> {
     const response = await this.gmail.users.labels.list({ userId: "me" });
     return (response.data.labels || []).map((label) => ({
       id: label.id || "",
@@ -76,7 +76,7 @@ export class GmailService {
     }));
   }
 
-  async getLabel(labelId: string): Promise<GmailLabel> {
+  public async getLabel(labelId: string): Promise<GmailLabel> {
     const response = await this.gmail.users.labels.get({
       userId: "me",
       id: labelId,
@@ -92,7 +92,7 @@ export class GmailService {
 
   // Messages
 
-  async listMessages(options: {
+  public async listMessages(options: {
     maxResults?: number;
     pageToken?: string;
     labelIds?: string[];
@@ -122,7 +122,7 @@ export class GmailService {
     };
   }
 
-  async getMessage(messageId: string): Promise<GmailMessage> {
+  public async getMessage(messageId: string): Promise<GmailMessage> {
     const response = await this.gmail.users.messages.get({
       userId: "me",
       id: messageId,
@@ -130,7 +130,7 @@ export class GmailService {
     });
 
     const headers = response.data.payload?.headers || [];
-    const getHeader = (name: string) =>
+    const getHeader = (name: string): string | null | undefined =>
       headers.find((h) => h.name?.toLowerCase() === name.toLowerCase())?.value;
 
     let body = "";
@@ -161,7 +161,7 @@ export class GmailService {
     };
   }
 
-  async sendEmail(options: SendEmailOptions): Promise<GmailMessage> {
+  public async sendEmail(options: SendEmailOptions): Promise<GmailMessage> {
     const messageParts = [
       `To: ${options.to}`,
       `Subject: ${options.subject}`,
@@ -205,7 +205,7 @@ export class GmailService {
     return this.getMessage(response.data.id!);
   }
 
-  async replyToEmail(
+  public async replyToEmail(
     messageId: string,
     body: string,
     isHtml = false
@@ -224,28 +224,28 @@ export class GmailService {
     });
   }
 
-  async trashMessage(messageId: string): Promise<void> {
+  public async trashMessage(messageId: string): Promise<void> {
     await this.gmail.users.messages.trash({
       userId: "me",
       id: messageId,
     });
   }
 
-  async untrashMessage(messageId: string): Promise<void> {
+  public async untrashMessage(messageId: string): Promise<void> {
     await this.gmail.users.messages.untrash({
       userId: "me",
       id: messageId,
     });
   }
 
-  async deleteMessage(messageId: string): Promise<void> {
+  public async deleteMessage(messageId: string): Promise<void> {
     await this.gmail.users.messages.delete({
       userId: "me",
       id: messageId,
     });
   }
 
-  async markAsRead(messageId: string): Promise<void> {
+  public async markAsRead(messageId: string): Promise<void> {
     await this.gmail.users.messages.modify({
       userId: "me",
       id: messageId,
@@ -255,7 +255,7 @@ export class GmailService {
     });
   }
 
-  async markAsUnread(messageId: string): Promise<void> {
+  public async markAsUnread(messageId: string): Promise<void> {
     await this.gmail.users.messages.modify({
       userId: "me",
       id: messageId,
@@ -265,7 +265,7 @@ export class GmailService {
     });
   }
 
-  async addLabels(messageId: string, labelIds: string[]): Promise<void> {
+  public async addLabels(messageId: string, labelIds: string[]): Promise<void> {
     await this.gmail.users.messages.modify({
       userId: "me",
       id: messageId,
@@ -275,7 +275,7 @@ export class GmailService {
     });
   }
 
-  async removeLabels(messageId: string, labelIds: string[]): Promise<void> {
+  public async removeLabels(messageId: string, labelIds: string[]): Promise<void> {
     await this.gmail.users.messages.modify({
       userId: "me",
       id: messageId,
@@ -287,7 +287,7 @@ export class GmailService {
 
   // Threads
 
-  async listThreads(options: {
+  public async listThreads(options: {
     maxResults?: number;
     pageToken?: string;
     labelIds?: string[];
@@ -313,7 +313,7 @@ export class GmailService {
     };
   }
 
-  async getThread(threadId: string): Promise<GmailThread> {
+  public async getThread(threadId: string): Promise<GmailThread> {
     const response = await this.gmail.users.threads.get({
       userId: "me",
       id: threadId,
@@ -323,7 +323,7 @@ export class GmailService {
     const messages: GmailMessage[] = [];
     for (const msg of response.data.messages || []) {
       const headers = msg.payload?.headers || [];
-      const getHeader = (name: string) =>
+      const getHeader = (name: string): string | null | undefined =>
         headers.find((h) => h.name?.toLowerCase() === name.toLowerCase())?.value;
 
       let body = "";
@@ -362,7 +362,7 @@ export class GmailService {
     };
   }
 
-  async trashThread(threadId: string): Promise<void> {
+  public async trashThread(threadId: string): Promise<void> {
     await this.gmail.users.threads.trash({
       userId: "me",
       id: threadId,
@@ -371,20 +371,20 @@ export class GmailService {
 
   // Search helpers
 
-  async searchEmails(query: string, maxResults = 20): Promise<GmailMessage[]> {
+  public async searchEmails(query: string, maxResults = 20): Promise<GmailMessage[]> {
     const { messages } = await this.listMessages({ q: query, maxResults });
     return messages;
   }
 
-  async getUnreadEmails(maxResults = 20): Promise<GmailMessage[]> {
+  public async getUnreadEmails(maxResults = 20): Promise<GmailMessage[]> {
     return this.searchEmails("is:unread", maxResults);
   }
 
-  async getStarredEmails(maxResults = 20): Promise<GmailMessage[]> {
+  public async getStarredEmails(maxResults = 20): Promise<GmailMessage[]> {
     return this.searchEmails("is:starred", maxResults);
   }
 
-  async getImportantEmails(maxResults = 20): Promise<GmailMessage[]> {
+  public async getImportantEmails(maxResults = 20): Promise<GmailMessage[]> {
     return this.searchEmails("is:important", maxResults);
   }
 }

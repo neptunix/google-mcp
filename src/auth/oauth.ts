@@ -1,4 +1,4 @@
-import { google, Auth } from "googleapis";
+import { google, type Auth } from "googleapis";
 import * as fs from "fs";
 import * as path from "path";
 import * as http from "http";
@@ -110,7 +110,7 @@ export class GoogleOAuth {
    * Creates them with appropriate permissions if they don't exist.
    * Safe to call multiple times.
    */
-  ensureDirectoriesExist(): void {
+  public ensureDirectoriesExist(): void {
     if (this.directoriesInitialized) {
       return;
     }
@@ -141,7 +141,7 @@ export class GoogleOAuth {
    * Get the paths where credentials and tokens should be stored.
    * Useful for displaying to users where to place their files.
    */
-  static getPaths(): { configDir: string; dataDir: string; credentialsPath: string; tokenPath: string } {
+  public static getPaths(): { configDir: string; dataDir: string; credentialsPath: string; tokenPath: string } {
     return {
       configDir: getConfigDir(),
       dataDir: getDataDir(),
@@ -180,7 +180,7 @@ export class GoogleOAuth {
     return null;
   }
 
-  async initialize(): Promise<boolean> {
+  public async initialize(): Promise<boolean> {
     const credentials = this.loadCredentials();
 
     if (!credentials) {
@@ -231,7 +231,7 @@ export class GoogleOAuth {
     return false;
   }
 
-  async authenticate(): Promise<boolean> {
+  public async authenticate(): Promise<boolean> {
     if (!this.oauth2Client) {
       const initialized = await this.initialize();
       if (!initialized && !this.oauth2Client) {
@@ -297,7 +297,7 @@ export class GoogleOAuth {
       server.listen(3000, () => {
         console.error("Opening browser for authentication...");
         console.error(`If browser doesn't open, visit: ${authUrl}`);
-        open(authUrl);
+        void open(authUrl);
       });
 
       // Timeout after 5 minutes
@@ -310,7 +310,7 @@ export class GoogleOAuth {
     });
   }
 
-  async setAuthCode(code: string): Promise<boolean> {
+  public async setAuthCode(code: string): Promise<boolean> {
     if (!this.oauth2Client) {
       await this.initialize();
     }
@@ -331,15 +331,15 @@ export class GoogleOAuth {
     }
   }
 
-  getClient(): Auth.OAuth2Client | null {
+  public getClient(): Auth.OAuth2Client | null {
     return this.oauth2Client;
   }
 
-  isReady(): boolean {
+  public isReady(): boolean {
     return this.isAuthenticated && this.oauth2Client !== null;
   }
 
-  getAuthUrl(): string | null {
+  public getAuthUrl(): string | null {
     if (!this.oauth2Client) {
       return null;
     }
@@ -351,21 +351,21 @@ export class GoogleOAuth {
     });
   }
 
-  async logout(): Promise<void> {
+  public async logout(): Promise<void> {
     if (fs.existsSync(TOKEN_PATH)) {
       fs.unlinkSync(TOKEN_PATH);
     }
     this.isAuthenticated = false;
     if (this.oauth2Client) {
-      this.oauth2Client.revokeCredentials();
+      void this.oauth2Client.revokeCredentials();
     }
   }
 
-  getCredentialsPath(): string {
+  public getCredentialsPath(): string {
     return CREDENTIALS_PATH;
   }
 
-  getTokenPath(): string {
+  public getTokenPath(): string {
     return TOKEN_PATH;
   }
 }

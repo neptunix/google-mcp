@@ -1,4 +1,4 @@
-import { google, slides_v1, Auth } from "googleapis";
+import { google, type slides_v1, type Auth } from "googleapis";
 import { DriveService } from "./drive.js";
 
 export interface Presentation {
@@ -72,15 +72,15 @@ export interface AddImageOptions {
 }
 
 export class SlidesService {
-  private slides: slides_v1.Slides;
-  private drive: DriveService;
+  private readonly slides: slides_v1.Slides;
+  private readonly drive: DriveService;
 
   constructor(authClient: Auth.OAuth2Client) {
     this.slides = google.slides({ version: "v1", auth: authClient });
     this.drive = new DriveService(authClient);
   }
 
-  async createPresentation(options: CreatePresentationOptions): Promise<Presentation> {
+  public async createPresentation(options: CreatePresentationOptions): Promise<Presentation> {
     const response = await this.slides.presentations.create({
       requestBody: {
         title: options.title,
@@ -97,7 +97,7 @@ export class SlidesService {
     return this.formatPresentation(response.data);
   }
 
-  async getPresentation(presentationId: string): Promise<Presentation> {
+  public async getPresentation(presentationId: string): Promise<Presentation> {
     const response = await this.slides.presentations.get({
       presentationId,
     });
@@ -105,7 +105,7 @@ export class SlidesService {
     return this.formatPresentation(response.data);
   }
 
-  async addSlide(options: AddSlideOptions): Promise<string> {
+  public async addSlide(options: AddSlideOptions): Promise<string> {
     const slideId = `slide_${Date.now()}`;
 
     await this.slides.presentations.batchUpdate({
@@ -128,7 +128,7 @@ export class SlidesService {
     return slideId;
   }
 
-  async deleteSlide(presentationId: string, slideObjectId: string): Promise<void> {
+  public async deleteSlide(presentationId: string, slideObjectId: string): Promise<void> {
     await this.slides.presentations.batchUpdate({
       presentationId,
       requestBody: {
@@ -143,7 +143,7 @@ export class SlidesService {
     });
   }
 
-  async addTextBox(options: AddTextOptions): Promise<string> {
+  public async addTextBox(options: AddTextOptions): Promise<string> {
     const textBoxId = `textbox_${Date.now()}`;
 
     // Default dimensions in EMU (English Metric Units)
@@ -190,7 +190,7 @@ export class SlidesService {
     return textBoxId;
   }
 
-  async addImage(options: AddImageOptions): Promise<string> {
+  public async addImage(options: AddImageOptions): Promise<string> {
     const imageId = `image_${Date.now()}`;
 
     const x = (options.x || 100) * 9525;
@@ -229,7 +229,7 @@ export class SlidesService {
     return imageId;
   }
 
-  async replaceAllText(
+  public async replaceAllText(
     presentationId: string,
     searchText: string,
     replaceText: string,
@@ -259,7 +259,7 @@ export class SlidesService {
     return 0;
   }
 
-  async updateTextStyle(
+  public async updateTextStyle(
     presentationId: string,
     objectId: string,
     style: {
@@ -327,7 +327,7 @@ export class SlidesService {
     });
   }
 
-  async setSlideBackground(
+  public async setSlideBackground(
     presentationId: string,
     slideObjectId: string,
     color: { red: number; green: number; blue: number }
@@ -356,7 +356,7 @@ export class SlidesService {
     });
   }
 
-  async deleteObject(presentationId: string, objectId: string): Promise<void> {
+  public async deleteObject(presentationId: string, objectId: string): Promise<void> {
     await this.slides.presentations.batchUpdate({
       presentationId,
       requestBody: {
@@ -371,7 +371,7 @@ export class SlidesService {
     });
   }
 
-  async duplicateSlide(
+  public async duplicateSlide(
     presentationId: string,
     slideObjectId: string
   ): Promise<string> {
@@ -396,7 +396,7 @@ export class SlidesService {
     return newSlideId;
   }
 
-  async moveSlide(
+  public async moveSlide(
     presentationId: string,
     slideObjectId: string,
     insertionIndex: number
@@ -416,7 +416,7 @@ export class SlidesService {
     });
   }
 
-  async listPresentations(pageSize = 50, pageToken?: string): Promise<{
+  public async listPresentations(pageSize = 50, pageToken?: string): Promise<{
     presentations: Array<{ id: string; name: string; modifiedTime?: string }>;
     nextPageToken?: string;
   }> {
@@ -437,7 +437,7 @@ export class SlidesService {
     };
   }
 
-  async addTable(
+  public async addTable(
     presentationId: string,
     slideObjectId: string,
     rows: number,
