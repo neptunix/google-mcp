@@ -111,14 +111,14 @@ Check required parameters before calling external APIs:
 public async handleTool(name: string, args: Record<string, unknown>): Promise<ToolResponse> {
   if (name === "docs_create") {
     const { title } = args as { title?: string };
-    
+
     if (!title?.trim()) {
       return {
         content: [{ type: "text", text: "Error: title is required and cannot be empty" }],
         isError: true
       };
     }
-    
+
     // Proceed with API call
   }
 }
