@@ -2,7 +2,7 @@ import { Component, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { 
+import {
   faSearch, faMicrophone, faCheck, faLock, faCode, faDesktop,
   faCalendarDays, faEnvelope, faFolder, faFileLines, faTableCells,
   faDisplay, faVideo, faComments, faClipboardQuestion, faCirclePlay,
