@@ -2820,7 +2820,7 @@ export class GoogleWorkspaceMCPServer {
           // Automatically start the OAuth flow - opens browser and handles callback
           console.error("Starting OAuth authentication flow...");
           const authenticated = await oauth.authenticate();
-          
+
           if (authenticated) {
             this.initializeServices();
             return {
