@@ -90,6 +90,16 @@ export default tseslint.config(
     },
   },
   {
+    // Relaxed rules for test files
+    files: ["**/__tests__/**/*.ts", "**/*.test.ts", "**/*.spec.ts"],
+    rules: {
+      // Allow type assertions in tests (needed for mocking)
+      "@typescript-eslint/consistent-type-assertions": "off",
+      // Allow any in tests
+      "@typescript-eslint/no-explicit-any": "off",
+    },
+  },
+  {
     // Ignore built files
     ignores: ["dist/**", "node_modules/**", "*.js"],
   }
