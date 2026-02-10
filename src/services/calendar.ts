@@ -138,6 +138,7 @@ export class CalendarService {
       singleEvents?: boolean;
       orderBy?: "startTime" | "updated";
       q?: string;
+      slim?: boolean;
     } = {}
   ): Promise<{ events: CalendarEvent[]; nextPageToken?: string }> {
     const response = await this.calendar.events.list({
@@ -152,7 +153,7 @@ export class CalendarService {
     });
 
     const events: CalendarEvent[] = (response.data.items || []).map((event) =>
-      this.formatEvent(event)
+      this.formatEvent(event, options.slim)
     );
 
     return {
@@ -325,7 +326,22 @@ export class CalendarService {
     return events;
   }
 
-  private formatEvent(event: calendar_v3.Schema$Event): CalendarEvent {
+  private formatEvent(event: calendar_v3.Schema$Event, slim?: boolean): CalendarEvent {
+    if (slim) {
+      return {
+        id: event.id!,
+        summary: event.summary || undefined,
+        start: event.start
+          ? {
+              dateTime: event.start.dateTime || undefined,
+              date: event.start.date || undefined,
+              timeZone: event.start.timeZone || undefined,
+            }
+          : undefined,
+        description: event.description || undefined,
+      };
+    }
+
     return {
       id: event.id!,
       summary: event.summary || undefined,

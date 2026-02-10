@@ -114,6 +114,41 @@ describe("CalendarService", () => {
         })
       );
     });
+
+    it("should return slim events when slim=true", async () => {
+      mockEventsList.mockResolvedValue({
+        data: {
+          items: [
+            {
+              id: "e1",
+              summary: "Meeting",
+              description: "Notes",
+              location: "Office",
+              start: { dateTime: "2024-01-15T10:00:00Z", timeZone: "UTC" },
+              end: { dateTime: "2024-01-15T11:00:00Z" },
+              attendees: [{ email: "user@example.com" }],
+              status: "confirmed",
+              htmlLink: "https://calendar.google.com/event",
+            },
+          ],
+        },
+      });
+
+      const result = await service.listEvents("primary", { slim: true });
+
+      expect(result.events).toHaveLength(1);
+      expect(result.events[0]).toEqual({
+        id: "e1",
+        summary: "Meeting",
+        description: "Notes",
+        start: { dateTime: "2024-01-15T10:00:00Z", timeZone: "UTC" },
+      });
+      expect(result.events[0]).not.toHaveProperty("location");
+      expect(result.events[0]).not.toHaveProperty("end");
+      expect(result.events[0]).not.toHaveProperty("attendees");
+      expect(result.events[0]).not.toHaveProperty("status");
+      expect(result.events[0]).not.toHaveProperty("htmlLink");
+    });
   });
 
   describe("getEvent", () => {
