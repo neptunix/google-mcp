@@ -149,6 +149,75 @@ describe("CalendarService", () => {
       expect(result.events[0]).not.toHaveProperty("status");
       expect(result.events[0]).not.toHaveProperty("htmlLink");
     });
+
+    it("should return events with attachments", async () => {
+      mockEventsList.mockResolvedValue({
+        data: {
+          items: [
+            {
+              id: "e1",
+              summary: "Design Review",
+              start: { dateTime: "2024-01-15T10:00:00Z" },
+              end: { dateTime: "2024-01-15T11:00:00Z" },
+              attachments: [
+                {
+                  fileId: "abc123",
+                  fileUrl: "https://docs.google.com/document/d/abc123/edit",
+                  iconLink: "https://drive-thirdparty.googleusercontent.com/icon",
+                  mimeType: "application/vnd.google-apps.document",
+                  title: "Meeting Transcript",
+                },
+              ],
+            },
+          ],
+        },
+      });
+
+      const result = await service.listEvents("primary");
+
+      expect(result.events[0].attachments).toHaveLength(1);
+      expect(result.events[0].attachments![0]).toEqual({
+        fileId: "abc123",
+        fileUrl: "https://docs.google.com/document/d/abc123/edit",
+        iconLink: "https://drive-thirdparty.googleusercontent.com/icon",
+        mimeType: "application/vnd.google-apps.document",
+        title: "Meeting Transcript",
+      });
+    });
+
+    it("should return slim attachments with only fileUrl and title when slim=true", async () => {
+      mockEventsList.mockResolvedValue({
+        data: {
+          items: [
+            {
+              id: "e1",
+              summary: "Design Review",
+              start: { dateTime: "2024-01-15T10:00:00Z" },
+              attachments: [
+                {
+                  fileId: "abc123",
+                  fileUrl: "https://docs.google.com/document/d/abc123/edit",
+                  iconLink: "https://drive-thirdparty.googleusercontent.com/icon",
+                  mimeType: "application/vnd.google-apps.document",
+                  title: "Meeting Transcript",
+                },
+              ],
+            },
+          ],
+        },
+      });
+
+      const result = await service.listEvents("primary", { slim: true });
+
+      expect(result.events[0].attachments).toHaveLength(1);
+      expect(result.events[0].attachments![0]).toEqual({
+        fileUrl: "https://docs.google.com/document/d/abc123/edit",
+        title: "Meeting Transcript",
+      });
+      expect(result.events[0].attachments![0]).not.toHaveProperty("fileId");
+      expect(result.events[0].attachments![0]).not.toHaveProperty("iconLink");
+      expect(result.events[0].attachments![0]).not.toHaveProperty("mimeType");
+    });
   });
 
   describe("getEvent", () => {
@@ -169,6 +238,31 @@ describe("CalendarService", () => {
 
       expect(result.summary).toBe("Meeting");
       expect(result.attendees).toHaveLength(1);
+    });
+
+    it("should return event with attachments", async () => {
+      mockEventsGet.mockResolvedValue({
+        data: {
+          id: "e1",
+          summary: "Design Review",
+          start: { dateTime: "2024-01-15T10:00:00Z" },
+          end: { dateTime: "2024-01-15T11:00:00Z" },
+          attachments: [
+            {
+              fileId: "abc123",
+              fileUrl: "https://docs.google.com/document/d/abc123/edit",
+              mimeType: "application/vnd.google-apps.document",
+              title: "Meeting Transcript",
+            },
+          ],
+        },
+      });
+
+      const result = await service.getEvent("primary", "e1");
+
+      expect(result.attachments).toHaveLength(1);
+      expect(result.attachments![0].fileUrl).toBe("https://docs.google.com/document/d/abc123/edit");
+      expect(result.attachments![0].title).toBe("Meeting Transcript");
     });
   });
 

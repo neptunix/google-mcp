@@ -1,5 +1,13 @@
 import { google, type calendar_v3, type Auth } from "googleapis";
 
+export interface EventAttachment {
+  fileId?: string;
+  fileUrl?: string;
+  iconLink?: string;
+  mimeType?: string;
+  title?: string;
+}
+
 export interface CalendarEvent {
   id: string;
   summary?: string;
@@ -30,6 +38,7 @@ export interface CalendarEvent {
     displayName?: string;
     self?: boolean;
   };
+  attachments?: EventAttachment[];
 }
 
 export interface CalendarInfo {
@@ -339,6 +348,10 @@ export class CalendarService {
             }
           : undefined,
         description: event.description || undefined,
+        attachments: event.attachments?.map((a) => ({
+          fileUrl: a.fileUrl || undefined,
+          title: a.title || undefined,
+        })),
       };
     }
 
@@ -378,6 +391,13 @@ export class CalendarService {
             self: event.organizer.self || undefined,
           }
         : undefined,
+      attachments: event.attachments?.map((a) => ({
+        fileId: a.fileId || undefined,
+        fileUrl: a.fileUrl || undefined,
+        iconLink: a.iconLink || undefined,
+        mimeType: a.mimeType || undefined,
+        title: a.title || undefined,
+      })),
     };
   }
 }
