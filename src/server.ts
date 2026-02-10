@@ -1005,6 +1005,11 @@ export class GoogleWorkspaceMCPServer {
                   type: "string",
                   description: "Token for pagination",
                 },
+                slim: {
+                  type: "boolean",
+                  description:
+                    "Return only summary, start, description fields for reduced response size",
+                },
               },
               required: [],
             },
@@ -3584,13 +3589,14 @@ export class GoogleWorkspaceMCPServer {
         }
 
         if (name === "calendar_list_events") {
-          const { calendarId, timeMin, timeMax, maxResults, q, pageToken } = args as {
+          const { calendarId, timeMin, timeMax, maxResults, q, pageToken, slim } = args as {
             calendarId?: string;
             timeMin?: string;
             timeMax?: string;
             maxResults?: number;
             q?: string;
             pageToken?: string;
+            slim?: boolean;
           };
           const result = await this.calendar!.listEvents(calendarId || "primary", {
             timeMin,
@@ -3598,6 +3604,7 @@ export class GoogleWorkspaceMCPServer {
             maxResults,
             q,
             pageToken,
+            slim,
           });
           return {
             content: [
