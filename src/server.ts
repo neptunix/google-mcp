@@ -23,7 +23,10 @@ import {
   DriveListOptionsSchema,
   DocCreateOptionsSchema,
   DocReadOptionsSchema,
+  DocListTabsSchema,
+  DocReadTabSchema,
   DocUpdateTextSchema,
+  DocAppendTextSchema,
   DocReplaceTextSchema,
   SheetCreateOptionsSchema,
   SheetReadOptionsSchema,
@@ -375,7 +378,28 @@ export class GoogleWorkspaceMCPServer {
           },
           {
             name: "docs_read",
-            description: "Read the content of a Google Doc.",
+            description:
+              "Read the content of a Google Doc. Returns document content and a list of all tabs. Use tabId to read a specific tab, otherwise reads the first/default tab.",
+            inputSchema: {
+              type: "object",
+              properties: {
+                documentId: {
+                  type: "string",
+                  description: "The ID of the document",
+                },
+                tabId: {
+                  type: "string",
+                  description:
+                    "Optional: ID of a specific tab to read. If not provided, reads the first tab. Use docs_list_tabs to discover available tabs.",
+                },
+              },
+              required: ["documentId"],
+            },
+          },
+          {
+            name: "docs_list_tabs",
+            description:
+              "List all tabs in a Google Doc. Returns tab IDs, titles, and hierarchy (nested tabs). Use this to discover tabs before reading specific tab content.",
             inputSchema: {
               type: "object",
               properties: {
@@ -388,8 +412,28 @@ export class GoogleWorkspaceMCPServer {
             },
           },
           {
+            name: "docs_read_tab",
+            description:
+              "Read the content of a specific tab in a Google Doc. Use docs_list_tabs first to discover available tabs and their IDs.",
+            inputSchema: {
+              type: "object",
+              properties: {
+                documentId: {
+                  type: "string",
+                  description: "The ID of the document",
+                },
+                tabId: {
+                  type: "string",
+                  description: "The ID of the tab to read",
+                },
+              },
+              required: ["documentId", "tabId"],
+            },
+          },
+          {
             name: "docs_insert_text",
-            description: "Insert text at a specific position in a Google Doc.",
+            description:
+              "Insert text at a specific position in a Google Doc. Optionally specify a tabId to insert into a specific tab.",
             inputSchema: {
               type: "object",
               properties: {
@@ -405,13 +449,18 @@ export class GoogleWorkspaceMCPServer {
                   type: "number",
                   description: "Position to insert at (1-based)",
                 },
+                tabId: {
+                  type: "string",
+                  description: "Optional: ID of a specific tab to insert into",
+                },
               },
               required: ["documentId", "text", "index"],
             },
           },
           {
             name: "docs_append_text",
-            description: "Append text to the end of a Google Doc.",
+            description:
+              "Append text to the end of a Google Doc. Optionally specify a tabId to append to a specific tab.",
             inputSchema: {
               type: "object",
               properties: {
@@ -423,13 +472,18 @@ export class GoogleWorkspaceMCPServer {
                   type: "string",
                   description: "Text to append",
                 },
+                tabId: {
+                  type: "string",
+                  description: "Optional: ID of a specific tab to append to",
+                },
               },
               required: ["documentId", "text"],
             },
           },
           {
             name: "docs_replace_text",
-            description: "Find and replace text in a Google Doc.",
+            description:
+              "Find and replace text in a Google Doc. Optionally specify a tabId to replace only within a specific tab.",
             inputSchema: {
               type: "object",
               properties: {
@@ -448,6 +502,11 @@ export class GoogleWorkspaceMCPServer {
                 matchCase: {
                   type: "boolean",
                   description: "Match case (default true)",
+                },
+                tabId: {
+                  type: "string",
+                  description:
+                    "Optional: ID of a specific tab to search within",
                 },
               },
               required: ["documentId", "searchText", "replaceText"],
@@ -3064,8 +3123,8 @@ export class GoogleWorkspaceMCPServer {
         }
 
         if (name === "docs_read") {
-          const { documentId } = DocReadOptionsSchema.parse(args);
-          const result = await this.docs!.getDocument(documentId);
+          const { documentId, tabId } = DocReadOptionsSchema.parse(args);
+          const result = await this.docs!.getDocumentWithTabs(documentId, tabId);
           return {
             content: [
               {
@@ -3076,46 +3135,84 @@ export class GoogleWorkspaceMCPServer {
           };
         }
 
-        if (name === "docs_insert_text") {
-          const { documentId, text, index } = DocUpdateTextSchema.parse(args);
-          await this.docs!.insertText(documentId, text, index);
+        if (name === "docs_list_tabs") {
+          const { documentId } = DocListTabsSchema.parse(args);
+          const tabs = await this.docs!.getDocumentTabs(documentId);
           return {
             content: [
               {
                 type: "text",
-                text: `Text inserted at index ${index}.`,
+                text: JSON.stringify(
+                  { documentId, tabs, tabCount: tabs.length },
+                  null,
+                  2
+                ),
+              },
+            ],
+          };
+        }
+
+        if (name === "docs_read_tab") {
+          const { documentId, tabId } = DocReadTabSchema.parse(args);
+          const tabContent = await this.docs!.getTabContent(documentId, tabId);
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(tabContent, null, 2),
+              },
+            ],
+          };
+        }
+
+        if (name === "docs_insert_text") {
+          const { documentId, text, index, tabId } =
+            DocUpdateTextSchema.parse(args);
+          await this.docs!.insertText(documentId, text, index, tabId);
+          return {
+            content: [
+              {
+                type: "text",
+                text: tabId
+                  ? `Text inserted at index ${index} in tab "${tabId}".`
+                  : `Text inserted at index ${index}.`,
               },
             ],
           };
         }
 
         if (name === "docs_append_text") {
-          const { documentId, text } = args as { documentId: string; text: string };
-          await this.docs!.appendText(documentId, text);
+          const { documentId, text, tabId } = DocAppendTextSchema.parse(args);
+          await this.docs!.appendText(documentId, text, tabId);
           return {
             content: [
               {
                 type: "text",
-                text: "Text appended to document.",
+                text: tabId
+                  ? `Text appended to tab "${tabId}".`
+                  : "Text appended to document.",
               },
             ],
           };
         }
 
         if (name === "docs_replace_text") {
-          const { documentId, searchText, replaceText, matchCase } =
+          const { documentId, searchText, replaceText, matchCase, tabId } =
             DocReplaceTextSchema.parse(args);
           const count = await this.docs!.replaceAllText(
             documentId,
             searchText,
             replaceText,
-            matchCase
+            matchCase,
+            tabId
           );
           return {
             content: [
               {
                 type: "text",
-                text: `Replaced ${count} occurrence(s) of "${searchText}".`,
+                text: tabId
+                  ? `Replaced ${count} occurrence(s) of "${searchText}" in tab "${tabId}".`
+                  : `Replaced ${count} occurrence(s) of "${searchText}".`,
               },
             ],
           };

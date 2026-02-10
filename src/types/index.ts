@@ -45,6 +45,28 @@ export interface DocContent {
   revisionId?: string;
 }
 
+// Google Docs Tab Types (API supports reading tabs, not creating)
+export interface TabInfo {
+  tabId: string;
+  title: string;
+  index: number;
+  childTabs?: TabInfo[]; // Recursive structure for nested tabs
+}
+
+export interface DocContentWithTabs extends DocContent {
+  tabs?: TabInfo[]; // List of all tabs in the document
+  activeTabId?: string; // Which tab content was read from
+  hasMultipleTabs?: boolean; // Quick flag for agents to check
+}
+
+export interface TabContent {
+  tabId: string;
+  title: string;
+  index: number;
+  body: string; // Extracted text content
+  parentTabId?: string; // For child tabs
+}
+
 export interface DocCreateOptions {
   title: string;
   content?: string;
@@ -147,12 +169,29 @@ export const DocCreateOptionsSchema = z.object({
 
 export const DocReadOptionsSchema = z.object({
   documentId: z.string().min(1),
+  tabId: z.string().optional(), // Optional: read specific tab
+});
+
+export const DocListTabsSchema = z.object({
+  documentId: z.string().min(1),
+});
+
+export const DocReadTabSchema = z.object({
+  documentId: z.string().min(1),
+  tabId: z.string().min(1),
 });
 
 export const DocUpdateTextSchema = z.object({
   documentId: z.string().min(1),
   text: z.string(),
   index: z.number().min(1),
+  tabId: z.string().optional(), // Optional: target specific tab
+});
+
+export const DocAppendTextSchema = z.object({
+  documentId: z.string().min(1),
+  text: z.string(),
+  tabId: z.string().optional(), // Optional: target specific tab
 });
 
 export const DocReplaceTextSchema = z.object({
@@ -160,6 +199,7 @@ export const DocReplaceTextSchema = z.object({
   searchText: z.string().min(1),
   replaceText: z.string(),
   matchCase: z.boolean().optional().default(true),
+  tabId: z.string().optional(), // Optional: replace only within specific tab
 });
 
 export const SheetCreateOptionsSchema = z.object({

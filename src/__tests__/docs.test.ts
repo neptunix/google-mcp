@@ -265,4 +265,259 @@ describe("DocsService", () => {
       expect(result.documents[0].id).toBe("doc1");
     });
   });
+
+  // Tab support tests
+  const mockTabsResponse = {
+    documentId: "doc1",
+    title: "Multi-Tab Doc",
+    revisionId: "rev1",
+    tabs: [
+      {
+        tabProperties: { tabId: "tab1", title: "First Tab", index: 0 },
+        documentTab: {
+          body: {
+            content: [
+              { paragraph: { elements: [{ textRun: { content: "Tab 1 content" } }] } },
+            ],
+          },
+        },
+        childTabs: [
+          {
+            tabProperties: { tabId: "tab1-child", title: "Child Tab", index: 0 },
+            documentTab: {
+              body: {
+                content: [
+                  { paragraph: { elements: [{ textRun: { content: "Child content" } }] } },
+                ],
+              },
+            },
+          },
+        ],
+      },
+      {
+        tabProperties: { tabId: "tab2", title: "Second Tab", index: 1 },
+        documentTab: {
+          body: {
+            content: [
+              { paragraph: { elements: [{ textRun: { content: "Tab 2 content" } }] } },
+            ],
+          },
+        },
+      },
+    ],
+  };
+
+  describe("getDocumentWithTabs", () => {
+    it("should return tabs information", async () => {
+      mockDocsGet.mockResolvedValue({ data: mockTabsResponse });
+
+      const result = await service.getDocumentWithTabs("doc1");
+
+      expect(result.tabs).toHaveLength(2);
+      expect(result.tabs![0].tabId).toBe("tab1");
+      expect(result.tabs![0].title).toBe("First Tab");
+      expect(result.tabs![0].childTabs).toHaveLength(1);
+      expect(result.hasMultipleTabs).toBe(true);
+    });
+
+    it("should read first tab by default", async () => {
+      mockDocsGet.mockResolvedValue({ data: mockTabsResponse });
+
+      const result = await service.getDocumentWithTabs("doc1");
+
+      expect(result.body).toBe("Tab 1 content");
+      expect(result.activeTabId).toBe("tab1");
+    });
+
+    it("should read specific tab by ID", async () => {
+      mockDocsGet.mockResolvedValue({ data: mockTabsResponse });
+
+      const result = await service.getDocumentWithTabs("doc1", "tab2");
+
+      expect(result.body).toBe("Tab 2 content");
+      expect(result.activeTabId).toBe("tab2");
+    });
+
+    it("should read nested child tab", async () => {
+      mockDocsGet.mockResolvedValue({ data: mockTabsResponse });
+
+      const result = await service.getDocumentWithTabs("doc1", "tab1-child");
+
+      expect(result.body).toBe("Child content");
+      expect(result.activeTabId).toBe("tab1-child");
+    });
+
+    it("should throw error for invalid tab ID", async () => {
+      mockDocsGet.mockResolvedValue({ data: mockTabsResponse });
+
+      await expect(service.getDocumentWithTabs("doc1", "invalid")).rejects.toThrow(
+        'Tab with ID "invalid" not found in document'
+      );
+    });
+
+    it("should handle single-tab document", async () => {
+      const singleTabResponse = {
+        documentId: "doc1",
+        title: "Single Tab",
+        tabs: [
+          {
+            tabProperties: { tabId: "only-tab", title: "Main", index: 0 },
+            documentTab: {
+              body: { content: [{ paragraph: { elements: [{ textRun: { content: "Content" } }] } }] },
+            },
+          },
+        ],
+      };
+      mockDocsGet.mockResolvedValue({ data: singleTabResponse });
+
+      const result = await service.getDocumentWithTabs("doc1");
+
+      expect(result.hasMultipleTabs).toBe(false);
+      expect(result.tabs).toHaveLength(1);
+    });
+  });
+
+  describe("getDocumentTabs", () => {
+    it("should list all tabs with hierarchy", async () => {
+      mockDocsGet.mockResolvedValue({ data: mockTabsResponse });
+
+      const tabs = await service.getDocumentTabs("doc1");
+
+      expect(tabs).toHaveLength(2);
+      expect(tabs[0].tabId).toBe("tab1");
+      expect(tabs[0].title).toBe("First Tab");
+      expect(tabs[0].childTabs).toHaveLength(1);
+      expect(tabs[0].childTabs![0].tabId).toBe("tab1-child");
+      expect(tabs[1].tabId).toBe("tab2");
+    });
+
+    it("should return empty array for document without tabs", async () => {
+      mockDocsGet.mockResolvedValue({
+        data: { documentId: "doc1", title: "No Tabs", tabs: undefined },
+      });
+
+      const tabs = await service.getDocumentTabs("doc1");
+
+      expect(tabs).toHaveLength(0);
+    });
+  });
+
+  describe("getTabContent", () => {
+    it("should return tab content with metadata", async () => {
+      mockDocsGet.mockResolvedValue({ data: mockTabsResponse });
+
+      const content = await service.getTabContent("doc1", "tab1");
+
+      expect(content.tabId).toBe("tab1");
+      expect(content.title).toBe("First Tab");
+      expect(content.index).toBe(0);
+      expect(content.body).toBe("Tab 1 content");
+      expect(content.parentTabId).toBeUndefined();
+    });
+
+    it("should find nested child tabs with parentTabId", async () => {
+      mockDocsGet.mockResolvedValue({ data: mockTabsResponse });
+
+      const content = await service.getTabContent("doc1", "tab1-child");
+
+      expect(content.tabId).toBe("tab1-child");
+      expect(content.title).toBe("Child Tab");
+      expect(content.body).toBe("Child content");
+      expect(content.parentTabId).toBe("tab1");
+    });
+
+    it("should throw error for invalid tab ID", async () => {
+      mockDocsGet.mockResolvedValue({ data: mockTabsResponse });
+
+      await expect(service.getTabContent("doc1", "nonexistent")).rejects.toThrow(
+        'Tab with ID "nonexistent" not found in document'
+      );
+    });
+  });
+
+  describe("insertText with tabs", () => {
+    it("should insert text with tabId", async () => {
+      mockDocsBatchUpdate.mockResolvedValue({ data: {} });
+
+      await service.insertText("doc1", "New text", 10, "tab2");
+
+      expect(mockDocsBatchUpdate).toHaveBeenCalledWith({
+        documentId: "doc1",
+        requestBody: {
+          requests: [{ insertText: { location: { index: 10, tabId: "tab2" }, text: "New text" } }],
+        },
+      });
+    });
+
+    it("should insert text without tabId for backward compatibility", async () => {
+      mockDocsBatchUpdate.mockResolvedValue({ data: {} });
+
+      await service.insertText("doc1", "New text", 10);
+
+      expect(mockDocsBatchUpdate).toHaveBeenCalledWith({
+        documentId: "doc1",
+        requestBody: {
+          requests: [{ insertText: { location: { index: 10, tabId: undefined }, text: "New text" } }],
+        },
+      });
+    });
+  });
+
+  describe("appendText with tabs", () => {
+    it("should append text to specific tab", async () => {
+      mockDocsGet.mockResolvedValue({ data: mockTabsResponse });
+      mockDocsBatchUpdate.mockResolvedValue({ data: {} });
+
+      await service.appendText("doc1", "Appended text", "tab2");
+
+      // Should look up content in tab2 and find the end index
+      expect(mockDocsBatchUpdate).toHaveBeenCalled();
+      const batchUpdateCall = mockDocsBatchUpdate.mock.calls[0][0];
+      expect(batchUpdateCall.requestBody.requests[0].insertText.location.tabId).toBe("tab2");
+    });
+
+    it("should throw error for invalid tab ID", async () => {
+      mockDocsGet.mockResolvedValue({ data: mockTabsResponse });
+
+      await expect(service.appendText("doc1", "Text", "invalid-tab")).rejects.toThrow(
+        'Tab with ID "invalid-tab" not found in document'
+      );
+    });
+  });
+
+  describe("replaceAllText with tabs", () => {
+    it("should replace text in specific tab", async () => {
+      mockDocsBatchUpdate.mockResolvedValue({
+        data: { replies: [{ replaceAllText: { occurrencesChanged: 2 } }] },
+      });
+
+      const count = await service.replaceAllText("doc1", "old", "new", true, "tab1");
+
+      expect(count).toBe(2);
+      expect(mockDocsBatchUpdate).toHaveBeenCalledWith({
+        documentId: "doc1",
+        requestBody: {
+          requests: [{
+            replaceAllText: {
+              containsText: { text: "old", matchCase: true },
+              replaceText: "new",
+              tabsCriteria: { tabIds: ["tab1"] },
+            },
+          }],
+        },
+      });
+    });
+
+    it("should replace text in all tabs when no tabId specified", async () => {
+      mockDocsBatchUpdate.mockResolvedValue({
+        data: { replies: [{ replaceAllText: { occurrencesChanged: 5 } }] },
+      });
+
+      const count = await service.replaceAllText("doc1", "old", "new");
+
+      expect(count).toBe(5);
+      const batchCall = mockDocsBatchUpdate.mock.calls[0][0];
+      expect(batchCall.requestBody.requests[0].replaceAllText.tabsCriteria).toBeUndefined();
+    });
+  });
 });
