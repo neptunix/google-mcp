@@ -78,7 +78,7 @@ export class DocsService {
     const doc = response.data;
     const tabs = this.extractTabsInfo(doc.tabs);
     const hasMultipleTabs =
-      tabs.length > 1 || tabs.some((t) => t.childTabs && t.childTabs.length > 0);
+      tabs.length > 1 || tabs.some((t) => t.childTabs?.length);
 
     let body: string;
     let activeTabId: string | undefined;
@@ -273,7 +273,7 @@ export class DocsService {
     if (tabId && doc.data.tabs) {
       const tab = this.findTabInHierarchy(doc.data.tabs, tabId);
       if (!tab) {
-        throw new Error(`Tab with ID "${tabId}" not found`);
+        throw new Error(`Tab with ID "${tabId}" not found in document`);
       }
       content = tab.documentTab?.body?.content;
     } else if (doc.data.tabs && doc.data.tabs.length > 0) {

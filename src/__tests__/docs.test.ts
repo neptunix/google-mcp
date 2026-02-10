@@ -480,7 +480,7 @@ describe("DocsService", () => {
       mockDocsGet.mockResolvedValue({ data: mockTabsResponse });
 
       await expect(service.appendText("doc1", "Text", "invalid-tab")).rejects.toThrow(
-        'Tab with ID "invalid-tab" not found'
+        'Tab with ID "invalid-tab" not found in document'
       );
     });
   });
