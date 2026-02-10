@@ -1008,7 +1008,7 @@ export class GoogleWorkspaceMCPServer {
                 slim: {
                   type: "boolean",
                   description:
-                    "Return only summary, start, description fields for reduced response size",
+                    "Return only id, summary, start, description fields for reduced response size",
                 },
               },
               required: [],
